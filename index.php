@@ -8,7 +8,7 @@ $barcode = 'https://e-sppt.sampangkab.go.id/cek_pbb.php';
 // lokasi simpan
 $codesDir = "assets/";
 // nama file
-$codeFile = 'tes.png';
+$codeFile = 'qris.png';
 $formData = $barcode;
 // perintah untuk membuat qrcode dan menampilkannya secara langsung dengan format .PNG
 QRcode::png($formData, $codesDir . $codeFile);
