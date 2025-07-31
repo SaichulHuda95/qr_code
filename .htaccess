@@ -1,0 +1,35 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect to HTTPS (opsional, aktifkan jika pakai SSL)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Clean URLs: hilangkan .php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.+)$ $1.php [L,QSA]
+</IfModule>
+
+# Security headers (opsional tapi disarankan)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Enable CORS (buat API)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, OPTIONS, PUT, DELETE"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
+
+# Block akses langsung ke file sensitif
+<FilesMatch "(\.env|\.htaccess|composer\.(json|lock)|package\.json|node_modules|vendor)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Optional: disable directory listing
+Options -Indexes

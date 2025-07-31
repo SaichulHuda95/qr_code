@@ -1,49 +1,109 @@
-<?php
-include "phpqrcode/qrlib.php";
+<!DOCTYPE html>
+<html lang="en">
 
-// Isi QR dan path
-$barcode = 'https://e-sppt.sampangkab.go.id/cek_pbb.php';
-$codesDir = "assets/";
-$codeFile = 'qris.png';
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QR Code Generator</title>
+    <link href="assets/bootstrap-5.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        #preview {
+            border: 1px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            min-height: 200px;
+        }
 
-// 1. Buat QR Code PNG (disimpan dulu)
-QRcode::png($barcode, $codesDir . $codeFile, QR_ECLEVEL_H, 10); // gunakan level H biar tahan kerusakan saat ditutup logo
+        #qr-result {
+            margin-top: 20px;
+        }
 
-// 2. Buka gambar QR Code dan logo
-$QR = imagecreatefrompng($codesDir . $codeFile);
-$logo = imagecreatefrompng('assets/logo.png'); // ganti sesuai logo kamu
+        .form-icon {
+            width: 2rem;
+        }
+    </style>
+</head>
 
-// 3. Ukuran gambar
-$QR_width = imagesx($QR);
-$QR_height = imagesy($QR);
-$logo_width = imagesx($logo);
-$logo_height = imagesy($logo);
+<body>
+    <div class="container py-5">
+        <h2 class="mb-4 text-center"><i class="bi bi-upc-scan me-2"></i>QR Code Generator</h2>
 
-// 4. Hitung ukuran logo yang di-resize
-$logo_qr_width = $QR_width / 4; // logo jadi 1/4 ukuran QR
-$scale = $logo_width / $logo_qr_width;
-$logo_qr_height = $logo_height / $scale;
+        <div class="card shadow">
+            <div class="card-body">
+                <form id="qrForm" action="proses_generate.php" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="textInput" class="form-label">URL atau Teks</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                            <input type="text" class="form-control" id="url" name="url" placeholder="Masukkan URL atau teks..." required>
+                        </div>
+                    </div>
 
-// 5. Hitung posisi tengah
-$from_width = ($QR_width - $logo_qr_width) / 2;
+                    <div class="mb-3">
+                        <label for="logoInput" class="form-label">Upload Logo (opsional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-image"></i></span>
+                            <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                        </div>
+                    </div>
 
-// 6. Tempel logo ke tengah QR
-imagecopyresampled(
-    $QR,
-    $logo,
-    $from_width,
-    $from_width,
-    0,
-    0,
-    $logo_qr_width,
-    $logo_qr_height,
-    $logo_width,
-    $logo_height
-);
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-qr-code me-1"></i>Generate QR Code
+                    </button>
+                </form>
+            </div>
+        </div>
 
-// 7. Simpan hasil akhir
-imagepng($QR, $codesDir . 'qris_logo.png');
-imagedestroy($QR);
-imagedestroy($logo);
+        <div id="qr-result" class="mt-4">
+            <h5>Preview:</h5>
+            <div id="preview">QR Code akan muncul di sini...</div>
+        </div>
+    </div>
 
-echo "QR Code dengan logo berhasil dibuat: qris_logo.png";
+    <script src="assets/bootstrap-5.3.7/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/jquery/jquery.min.js"></script>
+    <!-- Tambahkan script QR Code generator di sini -->
+    <script>
+        $(document).ready(function() {
+            $('#qrForm').on('submit', function(e) {
+                e.preventDefault();
+
+                // Ambil input teks
+                var url = $('#url').val();
+                if (!url) {
+                    alert('Mohon masukkan URL atau teks untuk QR Code.');
+                    return;
+                }
+
+                // Buat form data untuk upload logo jika ada
+                var formData = new FormData(this);
+                formData.append('barcode', url);
+
+                // Kirim data ke proses_generate.php
+                $.ajax({
+                    url: 'proses_generate.php',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    success: function(response) {
+                        $('#preview').html(
+                            `<img src="` + response.image + `" alt="QR Code" class="img-fluid"><br>
+                            <a href="` + response.image + `" download="qr_code.png" class="btn btn-success mt-2">
+                                <i class="bi bi-download me-1"></i>Download QR Code
+                            </a>`
+                        );
+                        alert(response.message);
+                    },
+                    error: function() {
+                        alert('Terjadi kesalahan saat membuat QR Code.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
